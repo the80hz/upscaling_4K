@@ -20,28 +20,28 @@ def main():
     orig_path = orig_path.replace('"', '')
     orig_path = orig_path.replace("'", '')
 
-    print('Converting to png...')
+    print('\n\nConverting to png...')
     os.mkdir('pic1x')
-    os.system(f'ffmpeg -y -hide_banner -i {orig_path} pic1x\\%06d.png')
+    os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" pic1x\\%06d.png')
 
-    print('Upscaling to 2x...')
+    print('\n\nUpscaling to 2x...')
     os.mkdir('pic2x')
-    os.system(f'realcugan -i {work_dir}\\pic1x\\%06d.png -o {work_dir}\\pic2x -n 1 -s 2 -f jpg')
+    os.system(f'realcugan -i pic1x -o pic2x -n 1 -s 2 -f jpg')
 
-    print('Converting to opus...')
-    os.system(f'ffmpeg -y -hide_banner -i {orig_path} -c:a libopus -b:a 192k audio.opus')
+    print('\n\nConverting to opus...')
+    os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" -c:a libopus -b:a 192k audio.opus')
 
-    print('Encoding to mkv...')
+    print('\n\nEncoding to mkv...')
     os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 -i '
               f'pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v main10 -pix_fmt '
               f'p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 -rc-lookahead 75 '
               f'-spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M -maxrate:v:0 40M -gpu '
               f'0 -r 24000/1001 output.mkv')
 
-    print('Cleaning up...')
-    shutil.rmtree('pic1x')
-    shutil.rmtree('pic2x')
-    os.remove('audio.opus')
+    # print('\n\nCleaning up...')
+    # shutil.rmtree('pic1x')
+    # shutil.rmtree('pic2x')
+    # os.remove('audio.opus')
 
 
 if __name__ == '__main__':
