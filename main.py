@@ -1,7 +1,6 @@
 import os
 import shutil
 from datetime import datetime
-import time
 
 
 def main():
@@ -32,19 +31,22 @@ def main():
     os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" -c:a libopus -b:a 192k audio.opus')
 
     print('\n\nEncoding to mkv...')
-    os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 -i '
-              f'pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v main10 -pix_fmt '
-              f'p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 -rc-lookahead 75 '
-              f'-spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M -maxrate:v:0 40M -gpu '
-              f'0 -r 24000/1001 output.mkv')
+    os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 '
+              f'-r 24000/1001 -i pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v '
+              f'main10 -pix_fmt p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 '
+              f'-rc-lookahead 75 -spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M '
+              f'-maxrate:v:0 40M -gpu 0 -r 24000/1001 output.mkv')
 
-    # print('\n\nCleaning up...')
-    # shutil.rmtree('pic1x')
-    # shutil.rmtree('pic2x')
-    # os.remove('audio.opus')
+    print('\n\nCleaning up...')
+    shutil.rmtree('pic1x')
+    shutil.rmtree('pic2x')
+    os.remove('audio.opus')
 
 
 if __name__ == '__main__':
+    start = datetime.now().timestamp()
     main()
-    # "E:\test"
+    end = datetime.now().timestamp()
+    print(f'The execution was {round(end - start, 2)} sec')
+    # E:\test
     # "E:\[anti-raws]Fate Apocrypha ep.22[BDRemux].mkv"
