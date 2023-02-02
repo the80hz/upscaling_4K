@@ -1,3 +1,11 @@
+"""
+This program is designed to convert anime to 2x resolution and encode it to HEVC using hevc_nvenc. The program uses
+ffmpeg and realcugan. You need to install them yourself and add them to the PATH. Also make sure you have at least
+An RTX 2000 series video card. Average encoding time is 6 hours for one 24-minute anime episode in 1080p resolution and
+200 GB of free space on the hard drive. The program is not optimized for speed, but for quality.
+"""
+
+
 import os
 import shutil
 from datetime import datetime
@@ -48,10 +56,6 @@ def main() -> None:
     Main function
     :return:
     """
-    print(
-        "For the program to work, you need at least 200 GB for one episode of anime, and up to 1 TB for a movie.")
-    print('Also make sure you have at least an RTX 2000 series graphics card.')
-
     work_dir = input('Enter directory: ')
     work_dir = work_dir.replace('"', '')
     work_dir = work_dir.replace("'", '')
