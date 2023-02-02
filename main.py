@@ -1,6 +1,6 @@
 import os
 import shutil
-import subprocess
+from datetime import datetime
 import time
 
 
@@ -12,6 +12,7 @@ def main():
     work_dir = input('Enter directory: ')
     work_dir = work_dir.replace('"', '')
     work_dir = work_dir.replace("'", '')
+    os.mkdir(work_dir)
 
     os.chdir(work_dir)
 
@@ -20,26 +21,27 @@ def main():
     orig_path = orig_path.replace("'", '')
 
     print('Converting to png...')
-    p1x_dir = os.path.join(work_dir, 'pic1x')
-    os.mkdir(p1x_dir)
-    os.system(f'ffmpeg -y -hide_banner -i {orig_path} {p1x_dir}\\%06d.png')
+    os.mkdir('pic1x')
+    os.system(f'ffmpeg -y -hide_banner -i {orig_path} pic1x\\%06d.png')
 
     print('Upscaling to 2x...')
-    p2x_dir = os.path.join(work_dir, 'pic2x')
-    os.mkdir(p2x_dir)
-    os.system(f'realcugan -i {p1x_dir}\\%06d.png -o {p2x_dir} -n 1 -s 2 -f jpg')
+    os.mkdir('pic2x')
+    os.system(f'realcugan -i {work_dir}\\pic1x\\%06d.png -o {work_dir}\\pic2x -n 1 -s 2 -f jpg')
 
     print('Converting to opus...')
-    audio_path = os.path.join(work_dir, 'audio.opus')
-    os.system(f'ffmpeg -y -hide_banner -i {orig_path} -c:a libopus -b:a 192k {audio_path}')
+    os.system(f'ffmpeg -y -hide_banner -i {orig_path} -c:a libopus -b:a 192k audio.opus')
 
     print('Encoding to mkv...')
-    os.system(f'ffmpeg -y -hide_banner -i {audio_path} -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 -i {p2x_dir}\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v main10 -pix_fmt p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 -rc-lookahead 75 -spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M -maxrate:v:0 40M -gpu 0 -r 24000/1001 {work_dir}\\output.mkv')
+    os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 -i '
+              f'pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v main10 -pix_fmt '
+              f'p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 -rc-lookahead 75 '
+              f'-spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M -maxrate:v:0 40M -gpu '
+              f'0 -r 24000/1001 output.mkv')
 
     print('Cleaning up...')
-    shutil.rmtree(p1x_dir)
-    shutil.rmtree(p2x_dir)
-    os.remove(audio_path)
+    shutil.rmtree('pic1x')
+    shutil.rmtree('pic2x')
+    os.remove('audio.opus')
 
 
 if __name__ == '__main__':
