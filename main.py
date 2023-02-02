@@ -3,21 +3,39 @@ import shutil
 from datetime import datetime
 
 
-def png1x(orig_path):
+def png1x(orig_path: str) -> None:
+    """
+    Extracting images from the original file
+    :param orig_path:
+    :return:
+    """
     os.mkdir('pic1x')
     os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" pic1x\\%06d.png')
 
 
-def png2x():
+def png2x() -> None:
+    """
+    Upscaling images to 2x resolution
+    :return:
+    """
     os.mkdir('pic2x')
     os.system(f'realcugan -i pic1x -o pic2x -n 1 -s 2 -f jpg')
 
 
-def audio_encoding(orig_path):
+def audio_encoding(orig_path: str) -> None:
+    """
+    Extracting audio from the original file and converting it to opus
+    :param orig_path:
+    :return:
+    """
     os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" -c:a libopus -b:a 192k audio.opus')
 
 
-def mkv_encoding():
+def mkv_encoding() -> None:
+    """
+    Merge the jpg's and audio into a single file
+    :return:
+    """
     os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 '
               f'-r 24000/1001 -i pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v '
               f'main10 -pix_fmt p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 '
@@ -25,7 +43,11 @@ def mkv_encoding():
               f'-maxrate:v:0 40M -gpu 0 -r 24000/1001 output.mkv')
 
 
-def main():
+def main() -> None:
+    """
+    Main function
+    :return:
+    """
     print(
         "For the program to work, you need at least 200 GB for one episode of anime, and up to 1 TB for a movie.")
     print('Also make sure you have at least an RTX 2000 series graphics card.')
