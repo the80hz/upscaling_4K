@@ -3,75 +3,46 @@ import shutil
 import subprocess
 import time
 
-from win32com import client
-from  win32gui import GetWindowText, GetForegroundWindow, SetForegroundWindow, EnumWindows
-from win32process import GetWindowThreadProcessId
 
-
-class ActivateVenv:
-
-    def set_cmd_to_foreground(self, hwnd, extra):
-        """sets first command prompt to forgeround"""
-
-        if "cmd.exe" in GetWindowText(hwnd):
-            SetForegroundWindow(hwnd)
-            return
-
-    def get_pid(self):
-        """gets process id of command prompt on foreground"""
-
-        window = GetForegroundWindow()
-        return GetWindowThreadProcessId(window)[1]
-
-    def activate_venv(self, shell, venv_location):
-        """activates venv of the active command prompt"""
-
-        shell.AppActivate(self.get_pid())
-        shell.SendKeys("cd \ {ENTER}")
-        shell.SendKeys(r"cd %s {ENTER}" % venv_location)
-        shell.SendKeys("activate {ENTER}")
-
-    def run_py_script(self,shell):
-        """runs the py script"""
-
-        shell.SendKeys("cd ../..{ENTER}")
-        shell.SendKeys("python run.py {ENTER}")
-
-    def open_cmd(self, shell):
-        """ opens cmd """
-
-        shell.run("cmd.exe")
-        time.sleep(1)
-
-
-if __name__ == '__main__':
+def main():
     print(
         "For the program to work, you need at least 200 GB for one episode of anime, and up to 1 TB for a movie.")
     print('Also make sure you have at least an RTX 2000 series graphics card.')
+
     work_dir = input('Enter directory: ')
+    work_dir = work_dir.replace('"', '')
+    work_dir = work_dir.replace("'", '')
+
+    os.chdir(work_dir)
+
     orig_path = input('Enter the full path of the original file: ')
+    orig_path = orig_path.replace('"', '')
+    orig_path = orig_path.replace("'", '')
 
-    print('Creating folders...')
-    os.mkdir(f'{work_dir}\pic1x')
-    os.mkdir(f'{work_dir}\pic2x')
-
-    # open new cmd window and run ffmpeg
     print('Converting to png...')
+    p1x_dir = os.path.join(work_dir, 'pic1x')
+    os.mkdir(p1x_dir)
+    os.system(f'ffmpeg -y -hide_banner -i {orig_path} {p1x_dir}\\%06d.png')
+
+    print('Upscaling to 2x...')
+    p2x_dir = os.path.join(work_dir, 'pic2x')
+    os.mkdir(p2x_dir)
+    os.system(f'realcugan -i {p1x_dir}\\%06d.png -o {p2x_dir} -n 1 -s 2 -f jpg')
+
+    print('Converting to opus...')
+    audio_path = os.path.join(work_dir, 'audio.opus')
+    os.system(f'ffmpeg -y -hide_banner -i {orig_path} -c:a libopus -b:a 192k {audio_path}')
+
+    print('Encoding to mkv...')
+    os.system(f'ffmpeg -y -hide_banner -i {audio_path} -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 -i {p2x_dir}\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v main10 -pix_fmt p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 -rc-lookahead 75 -spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M -maxrate:v:0 40M -gpu 0 -r 24000/1001 {work_dir}\\output.mkv')
+
+    print('Cleaning up...')
+    shutil.rmtree(p1x_dir)
+    shutil.rmtree(p2x_dir)
+    os.remove(audio_path)
 
 
-
-
-    os.system(f'ffmpeg -y -hide_banner -i {orig_path} {work_dir}\pic1x\%06d.png')
-
-    # E:\test
-    # "E:\test\[anti-raws]Fate Apocrypha ep.22[BDRemux].mkv"
-
-
-
-
-
-
-    # delete files that are not needed
-
-
-
+if __name__ == '__main__':
+    main()
+    # "E:\test"
+    # "E:\[anti-raws]Fate Apocrypha ep.22[BDRemux].mkv"
