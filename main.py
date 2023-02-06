@@ -36,7 +36,7 @@ def audio_encoding(orig_path: str) -> None:
     :param orig_path:
     :return:
     """
-    os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" -c:a libopus -b:a 192k audio.opus')
+    os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" -c:a libopus -b:a 192k -vbr 1 audio.opus')
 
 
 def mkv_encoding() -> None:
