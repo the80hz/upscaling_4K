@@ -31,6 +31,10 @@ class MainWindow(QMainWindow):
         self.initui()
 
     def initui(self):
+        """
+        Initializing the main window
+        :return:
+        """
         self.setWindowTitle('Video upscaler')
         self.setFixedSize(500, 355)
 
@@ -61,6 +65,10 @@ class MainWindow(QMainWindow):
         self.open_work_dir()
 
     def open_work_dir(self):
+        """
+        Opening a working directory
+        :return:
+        """
         while self.work_dir == '':
             self.work_dir = QFileDialog.getExistingDirectory(self, 'Select a working directory')
         os.chdir(self.work_dir)
@@ -68,6 +76,10 @@ class MainWindow(QMainWindow):
         self.button_work_dir.setText(f'Select a working directory. Current path: \n{self.work_dir}')
 
     def open_file(self):
+        """
+        Opening a file
+        :return:
+        """
         self.file_name = QFileDialog.getOpenFileName(self, 'Select a file', '', 'Video files (*.mkv *.mp4)')[0]
         if self.file_name != '':
             print(f'File selected {self.file_name}')
@@ -75,6 +87,10 @@ class MainWindow(QMainWindow):
             self.output_file_name_line.setText(self.file_name[:-4].split('/')[-1].split('\\')[-1] + '_2x.mkv')
 
     def start(self):
+        """
+        Starting the upscaling process
+        :return:
+        """
         if self.file_name == '':
             print('No file selected')
             return
@@ -151,6 +167,7 @@ def audio_encoding(orig_path: str) -> None:
 def mkv_encoding(output: str) -> None:
     """
     Merge the JPGs and audio into a single file
+    :param output:
     :return:
     """
     os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 '
