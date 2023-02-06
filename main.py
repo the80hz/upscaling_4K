@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
 
         print('\n\nEncoding to mkv...')
         s = datetime.now().timestamp()
-        mkv_encoding()
+        mkv_encoding(self.output_file_name_line.text())
         e = datetime.now().timestamp()
         print(f'Encoding to mkv took {round(e - s, 2)} sec')
 
@@ -148,7 +148,7 @@ def audio_encoding(orig_path: str) -> None:
     os.system(f'ffmpeg -y -hide_banner -i "{orig_path}" -c:a libopus -b:a 192k -vbr 1 audio.opus')
 
 
-def mkv_encoding() -> None:
+def mkv_encoding(output: str) -> None:
     """
     Merge the JPGs and audio into a single file
     :return:
@@ -157,7 +157,7 @@ def mkv_encoding() -> None:
               f'-r 24000/1001 -i pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v '
               f'main10 -pix_fmt p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 '
               f'-rc-lookahead 75 -spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M '
-              f'-maxrate:v:0 40M -gpu 0 -r 24000/1001 output.mkv')
+              f'-maxrate:v:0 40M -gpu 0 -r 24000/1001 "{output}"')
 
 
 '''
