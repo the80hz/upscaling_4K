@@ -152,7 +152,7 @@ def png2x() -> None:
     :return:
     """
     os.mkdir('pic2x')
-    os.system(f'realcugan -i pic1x -o pic2x -n 1 -s 2 -f jpg')
+    os.system(f'realcugan -i pic1x -o pic2x -t 600 -n 1 -s 2 -f jpg')
 
 
 def audio_encoding(orig_path: str) -> None:
@@ -171,7 +171,7 @@ def mkv_encoding(output: str) -> None:
     :return:
     """
     os.system(f'ffmpeg -y -hide_banner -i audio.opus -hwaccel cuda -hwaccel_output_format cuda -hwaccel_device 0 '
-              f'-r 24000/1001 -i pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c copy -c:v:0 hevc_nvenc -profile:v '
+              f'-r 24000/1001 -i pic2x\\%6d.jpg -vf "hwdownload,format=nv12" -c:a copy -c:v:0 hevc_nvenc -profile:v '
               f'main10 -pix_fmt p010le -rc:v:0 vbr -tune hq -preset p5 -multipass 1 -bf 4 -b_ref_mode 1 -nonref_p 1 '
               f'-rc-lookahead 75 -spatial-aq 1 -aq-strength 8 -temporal-aq 1 -cq 21 -qmin 1 -qmax 99 -b:v:0 20M '
               f'-maxrate:v:0 40M -gpu 0 -r 24000/1001 "{output}"')
